@@ -15,7 +15,6 @@ class AsteroidRepository(private val database: AsteroidDatabase) {
 
     private val weekDays = getNextSevenDaysFormattedDates()
     private val startDate = weekDays[0]
-    private val endDate = weekDays[7]
 
     val asteroids: LiveData<List<Asteroid>> = Transformations.map(database.dao.getAsteroidList()) {
         it.asDomainModel()

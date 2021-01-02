@@ -3,10 +3,14 @@ package com.udacity.asteroidradar.main
 import android.app.Application
 import androidx.lifecycle.*
 import com.udacity.asteroidradar.Asteroid
+import com.udacity.asteroidradar.BuildConfig
+import com.udacity.asteroidradar.PictureOfDay
+import com.udacity.asteroidradar.api.AsteroidApi
 import com.udacity.asteroidradar.database.getDatabase
 import com.udacity.asteroidradar.repository.AsteroidRepository
 import kotlinx.coroutines.launch
 import timber.log.Timber
+import java.lang.Exception
 import java.net.UnknownHostException
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -29,8 +33,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _navigateToDetailScreen.value = asteroid
     }
 
+    private val _pictureOfDay = MutableLiveData<PictureOfDay>()
+    val pictureOfDay: LiveData<PictureOfDay>
+        get() = _pictureOfDay
+
+    private fun getPictureDay() {
+        viewModelScope.launch {
+            try {
+                val pictureOfDay =
+                    AsteroidApi.retrofitServiceMoshi.getImageOfDay(BuildConfig.ApiKey)
+                if (pictureOfDay.mediaType == "image") {
+                    _pictureOfDay.value = pictureOfDay
+                } else {
+                    _pictureOfDay.value = PictureOfDay("", "", "")
+                }
+            }catch (e: Exception) {
+                Timber.e(e)
+            }
+        }
+    }
+
     init {
-      //  _navigateToDetailScreen.value = null
+        _navigateToDetailScreen.value = null
+        getPictureDay()
         viewModelScope.launch {
             try {
                 asteroidRepository.refreshAsteroids()
